@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from data.models.product import Product
 from data.repositories import BatchRepository, ProductRepository
@@ -30,7 +30,7 @@ class ProductService:
         updated = await self.repo.update(
             product.id,
             is_aggregated=True,
-            aggregated_at=datetime.utcnow(),
+            aggregated_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
         if updated is None:
             raise RuntimeError(f"Product {unique_code} disappeared during aggregation")

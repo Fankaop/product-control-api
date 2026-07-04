@@ -1,6 +1,6 @@
 from datetime import datetime, date, timedelta, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import Integer, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data.models.batch import Batch
@@ -43,9 +43,9 @@ class AnalyticsService:
         shifts_result = await self.session.execute(
             select(
                 Batch.shift,
-                func.count(Batch.id).label("batches"),
+                func.count(func.distinct(Batch.id)).label("batches"),
                 func.count(Product.id).label("products"),
-                func.sum(Product.is_aggregated.cast(type_=None)).label("aggregated"),
+                func.sum(Product.is_aggregated.cast(Integer)).label("aggregated"),
             )
             .outerjoin(Product, Product.batch_id == Batch.id)
             .group_by(Batch.shift)
@@ -65,9 +65,9 @@ class AnalyticsService:
                 WorkCenter.id,
                 WorkCenter.name,
                 WorkCenter.identifier,
-                func.count(Batch.id).label("batches_count"),
+                func.count(func.distinct(Batch.id)).label("batches_count"),
                 func.count(Product.id).label("products_count"),
-                func.sum(Product.is_aggregated.cast(type_=None)).label("aggregated"),
+                func.sum(Product.is_aggregated.cast(Integer)).label("aggregated"),
             )
             .join(Batch, Batch.work_center_id == WorkCenter.id)
             .outerjoin(Product, Product.batch_id == Batch.id)
@@ -124,7 +124,7 @@ class AnalyticsService:
         ) or 0
 
         # Timeline
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         shift_duration = (batch.shift_end - batch.shift_start).total_seconds() / 3600
         elapsed = min((now - batch.shift_start).total_seconds() / 3600, shift_duration)
         products_per_hour = round(aggregated / elapsed, 2) if elapsed > 0 else 0.0
@@ -190,7 +190,7 @@ class AnalyticsService:
                 Batch.shift_start,
                 Batch.shift_end,
                 func.count(Product.id).label("total"),
-                func.sum(Product.is_aggregated.cast(type_=None)).label("aggregated"),
+                func.sum(Product.is_aggregated.cast(Integer)).label("aggregated"),
             )
             .outerjoin(Product, Product.batch_id == Batch.id)
             .where(Batch.id.in_(batch_ids))

@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.exc import IntegrityError
 
@@ -72,7 +72,7 @@ class BatchService:
 
         if "is_closed" in update_data:
             if update_data["is_closed"] is True:
-                update_data["closed_at"] = datetime.utcnow()
+                update_data["closed_at"] = datetime.now(timezone.utc).replace(tzinfo=None)
             else:
                 update_data["closed_at"] = None
 

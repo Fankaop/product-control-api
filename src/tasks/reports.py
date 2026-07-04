@@ -1,6 +1,6 @@
 import asyncio
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from celery_app import celery_app
 from core.database import async_session_maker
@@ -47,18 +47,19 @@ async def _generate(task, batch_id: int, format: str, user_email: str | None):
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         object_name = f"batch_{batch_id}_report_{timestamp}.{ext}"
 
+        expires_days = 7
         minio_service.ensure_buckets()
         file_url = minio_service.upload_file(
             bucket="reports",
             file_path=file_path,
             object_name=object_name,
-            expires_days=7,
+            expires_days=expires_days,
         )
 
         file_size = os.path.getsize(file_path)
         os.remove(file_path)
 
-        expires_at = datetime.now(timezone.utc).isoformat()
+        expires_at = (datetime.now(timezone.utc) + timedelta(days=expires_days)).isoformat()
         result = {
             "success": True,
             "file_url": file_url,

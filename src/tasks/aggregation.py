@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from celery_app import celery_app
 from core.database import async_session_maker
 from data.repositories import BatchRepository, ProductRepository
@@ -23,7 +23,7 @@ async def _aggregate(task, batch_id: int, unique_codes: list[str], user_id: int 
             elif product.is_aggregated:
                 errors.append({'code': uniq, 'reason': 'already aggregated'})
             else:
-                await product_repo.update(product.id, is_aggregated=True, aggregated_at=datetime.utcnow())
+                await product_repo.update(product.id, is_aggregated=True, aggregated_at=datetime.now(timezone.utc).replace(tzinfo=None))
                 aggregated += 1
 
             task.update_state(

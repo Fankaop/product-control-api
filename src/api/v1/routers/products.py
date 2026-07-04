@@ -1,5 +1,3 @@
-from datetime import timezone, datetime
-
 from fastapi import APIRouter
 
 from api.v1.schemas.product import AggregateRequest, ProductCreate, ProductResponse
