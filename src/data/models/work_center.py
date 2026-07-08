@@ -1,0 +1,19 @@
+from datetime import datetime
+
+from sqlalchemy import func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from core.database import Base
+
+
+class WorkCenter(Base):
+    __tablename__ = 'work_centers'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    identifier: Mapped[str] = mapped_column(unique=True, index=True)
+    name: Mapped[str]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
+
+    # Связи
+    batches: Mapped[list['Batch']] = relationship(back_populates='work_center')  #type: ignore
